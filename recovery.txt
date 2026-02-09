@@ -3,3 +3,9 @@ rm -rf .venv
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt  # Всё восстановится!
+
+обновление при наждой установке новых модулей
+(.venv) pip install django
+(.venv) pip freeze > requirements.txt
+git add requirements.txt
+git commit -m "Добавлен Django"
