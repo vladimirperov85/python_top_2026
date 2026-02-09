@@ -1,0 +1,12 @@
+{
+    "name": "саша",
+    "age": 22,
+    "phone": "14353637383",
+    "email": [
+        "admin.com",
+        "alex@mail."
+    ],
+    "address": {
+        "city": "Новгород"
+    }
+}
