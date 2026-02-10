@@ -1,3 +1,4 @@
+import requests
 import json
 # user = {
 #     "id": 0,
@@ -17,7 +18,7 @@ import json
 #     print('Файл не найден')
 
 # print('hello world')
-import requests
+
 response = requests.get('https://www.geeksforgeeks.org/git/github-rest-api/')
 
 print(response.status_code)
