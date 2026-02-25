@@ -1,8 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-import lxml
-from openpyxl import Workbook
-from time import sleep
+import requests
 
 # Парсинг новостей с сайта https://ria.ru/
 

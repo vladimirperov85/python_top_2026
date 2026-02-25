@@ -8,5 +8,4 @@ def hello():
     print("Hello")
     return None
 
-result = hello()
-print(result)
+print(check_age(18))
