@@ -1,6 +1,6 @@
 import requests
 URL = 'https://www.logotypes.dev/apple?version=color'
-
+# TODO: дописать эту программу
 
 def get_url_image(url) -> str:
     try:
