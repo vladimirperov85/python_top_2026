@@ -22,7 +22,7 @@ dog1 = Dog('Бобик','3')
 dog1.get_info()
 dog1.eat()
 dog1.bark()
-print(dog)
+print(dog1)
 
 class User:
     def __init__(self,name,password):
