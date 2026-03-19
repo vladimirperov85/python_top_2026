@@ -27,3 +27,4 @@ build/
 htmlcov/
 .tox/
 .nox/
+.pyinb
