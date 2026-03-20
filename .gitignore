@@ -27,5 +27,3 @@ build/
 htmlcov/
 .tox/
 .nox/
-*.ipynb
-
