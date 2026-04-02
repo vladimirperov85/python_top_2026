@@ -8,27 +8,27 @@
 # 4. Добавьте свой метод transform() — выводит "Превращение!"
 
 
-# class Wolf:
+class Wolf:
 
-#     def howl(self):
-#         print(f"УУУ!")
+    def howl(self):
+        print(f"УУУ!")
 
-# class Dog:
+class Dog:
 
-#     def bark(self):
-#         print(f"Гав!")
+    def bark(self):
+        print(f"Гав!")
 
-# class Werewolf(Wolf, Dog):
+class Werewolf(Wolf, Dog):
 
-#     def transform(self):
-#             print(f'Превращение')
+    def transform(self):
+            print(f'Превращение')
 
-# #проверки
-# werewolf = Werewolf()
-# werewolf.howl()
-# werewolf.bark()
-# werewolf.transform()
-# Werewolf.__mro__
+#проверки
+werewolf = Werewolf()
+werewolf.howl()
+werewolf.bark()
+werewolf.transform()
+Werewolf.__mro__
 
 
 # Задание 2:
@@ -39,26 +39,26 @@
 # o Метод work() — выводит "[Имя] работает".
 
 
-# class EatMixin:
-#     def eat(self):
-#         print("Сотрудник ест")
+class EatMixin:
+    def eat(self):
+        print("Сотрудник ест")
 
-# class SleepMixin:
-#     def sleep(self):
-#         print("Сотрудник спит")
+class SleepMixin:
+    def sleep(self):
+        print("Сотрудник спит")
 
-# class Worker(EatMixin, SleepMixin):
-#     def __init__(self, name):
-#         self.name = name
+class Worker(EatMixin, SleepMixin):
+    def __init__(self, name):
+        self.name = name
 
-#     def work(self):
-#         print(f"{self.name} работает")
+    def work(self):
+        print(f"{self.name} работает")
 
-# #проверки
-# worker = Worker("Иван")
-# worker.eat()
-# worker.sleep()
-# worker.work()
+#проверки
+worker = Worker("Иван")
+worker.eat()
+worker.sleep()
+worker.work()
 
 
 # Задание 3:
@@ -67,26 +67,26 @@
 # 3. Создайте класс C, который наследуется от A и B в таком порядке: class C(A, B):.
 # 4. В классе C создайте метод test(), который вызывает self.show().
 
-# class A:
-#     def show(self):
-#         print("Класс A")
+class A:
+    def show(self):
+        print("Класс A")
 
-# class B:
-#     def show(self):
-#         print("Класс B")
+class B:
+    def show(self):
+        print("Класс B")
 
-# # class C(A, B):
-# #     def test(self):
-# #         self.show()
-
-# class C(B, A):
+# class C(A, B):
 #     def test(self):
 #         self.show()
 
-#проверки
-# с = C()
-# с.test()
-# C.mro() # метод mro() выводит порядок наследования классов - и если вызвать этот метод станет очеревидно
+class C(B, A):
+    def test(self):
+        self.show()
+
+# проверки
+с = C()
+с.test()
+C.mro() # метод mro() выводит порядок наследования классов - и если вызвать этот метод станет очеревидно
 # что класс С наследуется от класса А и только затем от класса В - поэтому будет вызван метод show() класса A,
 # если мы меняем порядок наследования на B, A - то будет вызван метод show() класса B
 
@@ -99,19 +99,19 @@
 # 3. Создайте класс Document, который наследуется от обоих миксинов.
 # 4. Добавьте метод create(content) — создаёт документ и использует оба миксина.
 
-# class PrintMixin:
-#     def print_document(self, text):
-#         print(text)
+class PrintMixin:
+    def print_document(self, text):
+        print(text)
 
-# class SaveMixin:
-#     def save_document(self, text):
-#         print(f"Сохранено: {text}")
+class SaveMixin:
+    def save_document(self, text):
+        print(f"Сохранено: {text}")
 
-# class Document(PrintMixin, SaveMixin):
-#     def create(self, content):
-#         self.print_document(content)
+class Document(PrintMixin, SaveMixin):
+    def create(self, content):
+        self.print_document(content)
 
 # проверки
-# document = Document()
-# document.create('Важный документ')
-# document.save_document('Важный документ')
+document = Document()
+document.create('Важный документ')
+document.save_document('Важный документ')
