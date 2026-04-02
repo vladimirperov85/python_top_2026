@@ -28,3 +28,4 @@ htmlcov/
 .tox/
 .nox/
 *.ipynb
+*.ini
