@@ -118,5 +118,93 @@ class Productmanager:
         finally:
             session.close()
 
+    def add_stock(self,product_id,quantity):
+        session = Session()
+        try:
+            product = session.query(Product).filter(Product.id == product_id).first()
+            if product:
+                if quantity > 0:
+                    product.stock += quantity
+                    session.commit()
+                    print(f'Количество товара {product.name} увеличилось на  {quantity} всего {product.stock}')
+                    return True
+            else:
+                print(f'Количесвто товара должно быть положительным')
+                return False
+        except Exception as e:
+            session.rollback()
+            print(f'Ошибка: {e}')
+            return False
+        finally:
+            session.close()
+
+
+
+    def update_available(self,product_id,is_available):
+        session = Session()
+        try:
+            product = session.query(Product).filter(Product.id == product_id).first()
+            if product:
+                product.is_avalable = is_available
+                status = 'Доступно' if is_available else 'Недоступно'
+                session.commit()
+                print(f'Товар {product.name} теперь {status}')
+                return True
+            else:
+                print(f'Товар с id {product_id} не найден')
+                return False
+        except Exception as e:
+            session.rollback()
+            print(f'Ошибка: {e}')
+            return False
+        finally:
+            session.close()
+
+    def update(self,product_id,**kwargs):
+        session = Session()
+        try:
+            product = session.query(Product).filter(Product.id == product_id).first()
+            if product:
+                for key,value in kwargs.items():
+                    if hasattr(product,key):
+                        setattr(product,key,value)
+                session.commit()
+                print(f'Товар {product.name} обновлен')
+                return True
+            else:
+                print(f'Товар с id {product_id} не найден')
+                return False
+        except Exception as e:
+            session.rollback()
+            print(f'Ошибка: {e}')
+            return False
+        finally:
+            session.close()
+
+    def delete(self,product_id):
+        session = Session()
+        try:
+            product = session.query(Product).filter(Product.id == product_id).first()
+            if product:
+                session.delete(product)
+                session.commit()
+                print(f'Товар {product.name} удален')
+                return True
+            else:
+                print(f'Товар с id {product_id} не найден')
+                return False
+        except Exception as e:
+            session.rollback()
+            print(f'Ошибка: {e}')
+            return False
+        finally:
+            session.close()
+
+
+if __name__ == '__main__':
+    Base.metadata.create_all(engine)
+    
+
+
 
     
