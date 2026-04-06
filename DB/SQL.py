@@ -47,8 +47,8 @@ class Product(Base):
             self.stock += quantity
         else:
             raise ValueError('Количество не должно быть отрицательным')
-Session = sessionmaker(bind=engine)
-session = Session()        
+# Session = sessionmaker(bind=engine)
+# session = Session()        
 # user1 = User(name='John', email='john@example.com', age=30)
 # user2 = User(name='Alice', email='alice@example.com', age=25)
 
@@ -66,6 +66,9 @@ session = Session()
 # user = session.query(User).get('')
 # print(user)
 
-ault_user = session.query(User).filter(User.age >= 18).all()
-print(f'{len(ault_user)} пользователей старше 18 лет')
+# ault_user = session.query(User).filter(User.age >= 18).all()
+# print(f'{len(ault_user)} пользователей старше 18 лет')
+
+
+
 
