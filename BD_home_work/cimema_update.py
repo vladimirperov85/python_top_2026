@@ -315,17 +315,18 @@ class MovieViewer:
 
 
 if __name__ == "__main__":
-    manager = MovieManager(engine)
-    all_movies = manager.get_all_movies()
-    MovieViewer.print_header("Список всех фильмов")
-    print(
-        """Номера id могут идти не по порядку - потому-что некоторые фильмы были удалены, а другие добавлены  в  базу данных."""
-    )
-    MovieViewer().print_all(all_movies)
-    print()
-    MovieViewer.print_header("Вывод одного фильма")
-    movie = manager.get_movie_by_title("Терминатор")
-    MovieViewer().print_one(movie)
-    print()
-    print()
-    MovieViewer().print_statistics(all_movies)
+    # manager = MovieManager(engine)
+    # all_movies = manager.get_all_movies()
+    # MovieViewer.print_header("Список всех фильмов")
+    # print(
+    #     """Номера id могут идти не по порядку - потому-что некоторые фильмы были удалены, а другие добавлены  в  базу данных."""
+    # )
+    # MovieViewer().print_all(all_movies)
+    # print()
+    # MovieViewer.print_header("Вывод одного фильма")
+    # movie = manager.get_movie_by_title("Терминатор")
+    # MovieViewer().print_one(movie)
+    # print()
+    # print()
+    # MovieViewer().print_statistics(all_movies)
+    pass
