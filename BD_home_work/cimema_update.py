@@ -1,3 +1,4 @@
+from multiprocessing import managers
 from turtle import update
 from venv import create
 
@@ -234,39 +235,97 @@ class MovieManager:
             session.close()
 
 
+class MovieViewer:
+
+    @staticmethod
+    def print_header(text):
+        print("=" * 60)
+        print(text)
+        print("=" * 60)
+
+    @staticmethod
+    def print_statistics(movies):
+
+        if not movies:
+            print("Нет данных!")
+            return
+
+        total = len(movies)
+        total_rating = sum(movie.rating for movie in movies if movie.rating)
+        average_rating = total_rating / total if total > 0 else 0
+        available = sum(1 for movie in movies if movie.is_available)
+        not_available = total - available
+        years = [movie.year for movie in movies if movie.year]
+        min_year = min(years) if years else "-"
+        max_year = max(years) if years else "-"
+
+        print("=" * 60)
+        print("СТАТИСТИКА ПО ФИЛЬМАМ")
+        print("=" * 60)
+        print("Всего фильмов:", total)
+        print("Средний рейтинг:", round(average_rating, 2))
+        print("Доступных:", available)
+        print("Недоступных:", not_available)
+        print("Год выпуска: от", min_year, "до", max_year)
+        print("=" * 60)
+
+    def print_all(self, movies):
+
+        if not movies:
+            print("Фильмов не найдено.")
+
+            return
+
+        print("=" * 80)
+        print("ID | Название | Жанр | Год | Рейтинг | Доступен")
+        print("-" * 80)
+
+        for movie in movies:
+            availability = "Доступен" if movie.is_available else "Недоступен"
+            print(
+                movie.id,
+                movie.title,
+                movie.genre,
+                movie.year,
+                movie.rating,
+                availability,
+                sep=" | ",
+            )
+
+        print("=" * 80)
+        print("Количество фильмов в базе данных:", len(movies))
+
+    def print_one(self, movie):
+        """Выводит один фильм в красивом формате"""
+
+        if not movie:
+            print("Фильм не найден!")
+            return
+
+        print("=" * 60)
+        print("ID:", movie.id)
+        print("Название:", movie.title)
+        print("Жанр:", movie.genre)
+        print("Год:", movie.year)
+        print("Рейтинг:", movie.rating)
+        print("Длительность:", movie.duration, "мин")
+        availability = "Да" if movie.is_available else "Нет"
+        print("Доступен:", availability)
+        print("=" * 60)
+
+
 if __name__ == "__main__":
-    movie_manager = MovieManager(engine)
-    # updated_movie = movie_manager.update_movie(1, title="Побег из Шоушенка",rating=11.0)
-    # created_movie = movie_manager.create_movie("Терминатор", "Боевик", 1997, 120, 11.0)
-    # all_movies = movie_manager.get_all_movies()
-    # for movie in all_movies:
-    #     print(movie)
-    # by_id = movie_manager.get_by_id(13)
-    # print(by_id)
-    # updated_movie = movie_manager.update_movie(13,title='Терминатор 2', rating=13.0)
-    # print(updated_movie)
-    # movie_by_title = movie_manager.get_movie_by_title('Gunshoot')
-    # print(movie_by_title)
-    # movies_by_genre = movie_manager.get_movies_by_genre('Боевик')
-    # for movie in movies_by_genre:
-    #     print(movie)
-    # movies_by_year = movie_manager.get_movies_by_year(1997)
-    # for movie in movies_by_year:
-    #     print(movie)
-    # movies_by_rating = movie_manager.get_high_rated_movies(8.0)
-    # for movie in movies_by_rating:
-    #     print(movie)
-    # updated_movie = movie_manager.update_rating(13, 9.7)
-    # print(updated_movie)
-    # update_genre = movie_manager.update_genre(2, 'Триллер')
-    # print(update_genre)
-    # update_availability = movie_manager.update_availability(11, False)
-    # print(update_availability)
-    # updated_movie = movie_manager.update_full(13, title='Терминатор 3', rating=9.7, genre='Фантастика')
-    # print(updated_movie)
-    # deleted_movie = movie_manager.delete_by_id(13)
-    # print(deleted_movie)
-    # deleted_movie = movie_manager.delete_by_title('Темный рыцарь')
-    # print(deleted_movie)
-    # sorted_movies = movie_manager.soft_delete(12)
-    # print(sorted_movies)
+    manager = MovieManager(engine)
+    all_movies = manager.get_all_movies()
+    MovieViewer.print_header("Список всех фильмов")
+    print(
+        """Номера id могут идти не по порядку - потому-что некоторые фильмы были удалены, а другие добавлены  в  базу данных."""
+    )
+    MovieViewer().print_all(all_movies)
+    print()
+    MovieViewer.print_header("Вывод одного фильма")
+    movie = manager.get_movie_by_title("Терминатор")
+    MovieViewer().print_one(movie)
+    print()
+    print()
+    MovieViewer().print_statistics(all_movies)
