@@ -29,3 +29,16 @@ htmlcov/
 .nox/
 *.ipynb
 *.ini
+
+# Файлы SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Файлы PostgreSQL (если локальные дампы)
+*.dump
+*.sql
+
+# MySQL
+*.ibd
+*.frm
