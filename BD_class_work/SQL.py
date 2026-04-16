@@ -3,7 +3,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Boolean,Float
 from sqlalchemy.orm import declarative_base, sessionmaker
 # подключение к БД
- # только один раз
+# только один раз
 
 # базовый класс
 Base = declarative_base()
