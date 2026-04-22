@@ -485,7 +485,13 @@ class CinemaViewer:
     """Класс для отображения связей между жанрами и фильмами."""
 
     def print_all_genres_with_movies(self, genres, movies):
-        
+        """
+        Вывод статистики связей между жанрами и фильмами.
+
+        Args:
+            genres: список всех жанров (из GenreManager.get_all())
+            movies: список всех фильмов (из MovieManager.get_all_movies())
+        """
         print("\n" + "=" * 60)
         print("КАТАЛОГ КИНОТЕАТРА: ЖАНРЫ И ФИЛЬМЫ")
         print("=" * 60)
@@ -514,6 +520,8 @@ class CinemaViewer:
         print("-" * 60)
         print(f"ВСЕГО: {len(genres)} жанров, {len(movies)} фильмов")
         print("=" * 60)
+
+
 
 
 if __name__ == "__main__":
