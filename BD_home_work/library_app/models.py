@@ -58,7 +58,10 @@ class LibraryManager:
         print(f"Автор {name} добавлен в базу данных.")
         return author
 
-    def add_book(self,title, author_id, year, isbn):
+    def add_book(self, title, author_id, year, isbn=None):
+        if not self.find_author_by_id(author_id):
+            print(f"Автор с ID {author_id} не найден.")
+            return None
         book = Book(title=title, author_id=author_id, year=year, isbn=isbn)
         self.session.add(book)
         self.session.commit()
@@ -68,8 +71,14 @@ class LibraryManager:
     def get_all_authors(self):
         return self.session.query(Author).all()
 
+    def get_all_books(self):
+        return self.session.query(Book).all()
+
     def find_author_by_id(self, author_id):
         return self.session.query(Author).filter(Author.id == author_id).first()
+
+    def find_book_by_id(self, book_id):
+        return self.session.query(Book).filter(Book.id == book_id).first()
 
     def update_author(self, author_id, new_name):
         author = self.session.query(Author).filter_by(id=author_id).first()
@@ -80,6 +89,20 @@ class LibraryManager:
         else:
             print(f"Автор с ID {author_id} не найден.")
 
+    def update_book(self, book_id, new_title=None, new_year=None, new_isbn=None):
+        book = self.find_book_by_id(book_id)
+        if book:
+            if new_title is not None:
+                book.title = new_title
+            if new_year is not None:
+                book.year = new_year
+            if new_isbn is not None:
+                book.isbn = new_isbn
+            self.session.commit()
+            print(f"Книга с ID {book_id} обновлена.")
+        else:
+            print(f"Книга с ID {book_id} не найдена.")
+
     def delete_author(self, author_id):
         author = self.session.query(Author).filter_by(id=author_id).first()
         if author:
@@ -88,3 +111,52 @@ class LibraryManager:
             print(f"Автор с ID {author_id} удален из базы данных.")
         else:
             print(f"Автор с ID {author_id} не найден.")
+
+    def delete_book(self, book_id):
+        book = self.find_book_by_id(book_id)
+        if book:
+            self.session.delete(book)
+            self.session.commit()
+            print(f"Книга с ID {book_id} удалена из базы данных.")
+        else:
+            print(f"Книга с ID {book_id} не найдена.")
+
+    def add_reader(self, first_name, last_name, email):
+        reader = Reader(first_name=first_name, last_name=last_name, email=email)
+        self.session.add(reader)
+        self.session.commit()
+        print(f"Читатель {first_name} добавлен в базу данных.")
+        return reader
+
+    def get_all_readers(self):
+        return self.session.query(Reader).all()
+
+    def find_reader_by_id(self, reader_id):
+        return self.session.query(Reader).filter(Reader.id == reader_id).first()
+
+    def update_reader(
+        self, reader_id, new_first_name=None, new_last_name=None, new_email=None
+    ):
+        reader = self.find_reader_by_id(reader_id)
+        if reader:
+            if new_first_name is not None:
+                reader.first_name = new_first_name
+                print(f"Имя читателя с ID {reader_id} обновлено на '{new_first_name}'.")
+            if new_last_name is not None:
+                reader.last_name = new_last_name
+                print(f"Имя читателя с ID {reader_id} обновлено на '{new_last_name}'.")
+            if new_email is not None:
+                reader.email = new_email
+                print(f"Имя читателя с ID {reader_id} обновлено на '{new_email}'.")
+            self.session.commit()
+        else:
+            print(f"Читатель с ID {reader_id} не найден.")
+
+    def delete_reader(self, reader_id):
+        reader = self.find_reader_by_id(reader_id)
+        if reader:
+            self.session.delete(reader)
+            self.session.commit()
+            print(f"Читатель с ID {reader_id} удален из базы данных.")
+        else:
+            print(f"Читатель с ID {reader_id} не найден.")
