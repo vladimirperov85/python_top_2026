@@ -1,9 +1,8 @@
 from sqlalchemy import ForeignKey, Column, Integer, String, Boolean,create_engine,select,Numeric
 from sqlalchemy.orm import DeclarativeBase,Session,declarative_base,Mapped,Mapper,Session,relationship,mapped_column,selectinload,joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm.exc import NoResultFound
 from datetime import date
-from typing import List,Optional
+from typing import List,Optional, Sequence
 from decimal import Decimal
 import logging
 
@@ -43,10 +42,11 @@ class Product(Base):
     price: Mapped[Decimal] = mapped_column(Numeric(10,2),nullable=False)
     manufacturer: Mapped['Manufacturer'] = relationship(back_populates='products')
     orders: Mapped[List['Order']] = relationship(back_populates='product',lazy = 'select')
-    serial_number = Mapped[Optional[str]] = mapped_column(String(100),unique=True,nullable=False)
+    serial_number:Mapped[Optional[str]] = mapped_column(String(100),unique=True,nullable=False)
     def __repr__(self):
         return f'<Product(name={self.name}, category={self.category}, price={self.price}, manufacturer_id={self.manufacturer_id})>'
-
+    
+        
     def __str__(self):
         return f'Product {self.name} ({self.category} {self.price})'
 
@@ -91,127 +91,85 @@ class Order(Base):
         return self.status in active_statuses
 
 class StoreManager:
-
-    STATUS_PROGRESSING = 'Progressing'
-    STATUS_SHIPPED = 'Shipped'
-    STATUS_DELIVERED = 'Delivered'
-    STATUS_CANCELED = 'Canceled'
-
-    ACTIVE_STATUSES = {STATUS_PROGRESSING,STATUS_SHIPPED,'Confimed','Pending'}
-
+    
     def __init__(self, db_url: str):
-        self.engine = create_engine(f'sqlite:///{db_url}',echo=False,connect_args={'check_same_thread': False})
+        self.engine = create_engine(f'sqlite:///{db_url}', echo=False, connect_args={'check_same_thread': False})
         Base.metadata.create_all(self.engine) 
-        logger.info('Connect to DB : {db_path}')
-
-
+        logger.info(f'Connect to DB : {db_url}')  # <- исправлен f-string
+    
     def _get_session(self) -> Session:
         return Session(self.engine)
     
-    def _ferth_one(self,stmt):
+    def _fetch_one(self, stmt):  # <- исправлено название
         try:
             with self._get_session() as session:
                 result = session.scalar(stmt)
                 return result
         except SQLAlchemyError as e:
-            logger.error(f'Error requst: {e}')
+            logger.error(f'Error request: {e}')
             raise
-
-        def _fetch_all(self,stmt):
-            try:
-                with self._get_session() as session:
-                    result = session.scalars(stmt).all()
-                    return result
-            except SQLAlchemyError as e:
-                logger.error(f'Errors request: {e}')
-                raise
-
-        def _save_obj(self,obj_save):
-            try:
-                with self._get_session() as session:
-                    session.add(obj_save)
-                    session.commit()
-                    session.refresh(obj_save)
-                    session.expunge(obj_save)
-                    return obj_save
-            except SQLAlchemyError as e:
-                if 'session' in locals():
-                    session.rollback()
-                logger.error(f'Error save obj: {e}')
-                raise
-        
-        def delete_obj(self,obj_del):
-            try:
-                with self._get_session() as session:
-                    session.delete(obj_del)
-                    session.commit()
-                    return True
-            except SQLAlchemyError as e:
-                if 'session' in locals():
-                    session.rollback()
-                    logger.error(f'Error delete obj: {e}')
-                    raise
-            
-
-
-
-    def _execute_query(self, stmt):
-        with Session(self.engine) as session:
-            result = session.execute(stmt)
-            # Определяем тип запроса
-            if stmt.is_select:
-                # Для SELECT запросов
-                if hasattr(stmt, '_limit_clause') or 'WHERE' in str(stmt).upper():
-                    # Может быть один результат
-                    return result.scalar_one_or_none()
-                return result.scalars().all()
-            return result
-            
-    def _execute_mutation(self,obj_save):
-        with Session(self.engine) as session:
-            session.add(obj_save)
-            session.commit()
-
-        
     
-    def add_manufacturer(self,name: str)-> Manufacturer:
-        manufacturer = Manufacturer(name = name)
-        self._execute_mutation(manufacturer)
-        print(f'Производитель {name} добавлен')
-        return manufacturer
-
-        def get_manufacturer(self,name:str)-> Manufacturer:
-            if not isinstance(name,str):
-                raise ValueError('Название не должно быть пустой строкой')
-            manufacturer = Manufacturer(name = name.strip())
-            saved_manufacturer = self.save_obj(manufacturer)
-            logger.info(f'Производитель {saved_manufacturer.name}  добавлен')
-            return saved_manufacturer
-        
-        def get_manufacturer(self) ->list[Manufacturer]:
-            return self.fetch_all(stmt)
-        
-
-        def find_manufacturer_by_id(self,manufacturer_id:int)-> Optional[Manufacturer]:
+    def _fetch_all(self, stmt):  # <- правильный отступ
+        try:
+            with self._get_session() as session:
+                result = session.scalars(stmt).all()
+                return result
+        except SQLAlchemyError as e:
+            logger.error(f'Errors request: {e}')
+            raise
+    
+    def _save_obj(self, obj_save):  # <- правильный отступ
+        try:
+            with self._get_session() as session:
+                session.add(obj_save)
+                session.commit()
+                session.refresh(obj_save)
+                session.expunge(obj_save)
+                return obj_save
+        except SQLAlchemyError as e:
+            logger.error(f'Error save obj: {e}')
+            raise
+    
+    def delete_obj(self, obj_del):  # <- правильный отступ
+        try:
+            with self._get_session() as session:
+                session.delete(obj_del)
+                session.commit()
+                return True
+        except SQLAlchemyError as e:
+            logger.error(f'Error delete obj: {e}')
+            raise
+    
+    def add_manufacturer(self, name: str) -> Manufacturer:
+        manufacturer = Manufacturer(name=name)
+        return self._save_obj(manufacturer)  # <- используется _save_obj
+    
+    def get_manufacturer_by_name(self, name: str) -> Optional[Manufacturer]:
+        if not name or not isinstance(name, str):
+            raise ValueError('Название не должно быть пустой строкой')
+        stmt = select(Manufacturer).where(Manufacturer.name == name.strip())
+        return self._fetch_one(stmt)
+    
+    def get_all_manufacturers(self) -> Sequence[Manufacturer]:
+        stmt = select(Manufacturer)
+        return self._fetch_all(stmt)
+    
+    
+    def find_manufacturer_by_id(self,manufacturer_id:int)-> Optional[Manufacturer]:
             if not isinstance(manufacturer_id,int) or manufacturer_id <= 0:
                 raise ValueError('ID должен быть целым положительным числом')
             stmt = select(Manufacturer).where(Manufacturer.id == manufacturer_id)
             return self._fetch_one(stmt)
-        
-
-
-        def update_manufacturer(self,manufacturer_id:int,new_name:str)-> bool:
-            if not isinstance(new_name,str) or not new_name.strip():
-                raise ValueError('Название не должно быть пустой строкой')
-            manufacturer = self.find_manufacturer_by_id(manufacturer_id)
-            if not manufacturer:
-                logger.warning(f'Производитель с ID {manufacturer_id} не найден')
-                return False
-            old_name = manufacturer.name
-            manufacturer.name = new_name.strip()
-            self.save_obj(manufacturer)
-            logger.info(f'Производитель {old_name} обновлен на {new_name}')
-            return True
-
-
-
+    
+    def update_manufacturer(self, manufacturer_id: int, new_name: str) -> bool:
+        if not isinstance(new_name, str) or not new_name.strip():
+            raise ValueError('Название не должно быть пустой строкой')
+        manufacturer = self.find_manufacturer_by_id(manufacturer_id)
+        if not manufacturer:
+            logger.warning(f'Производитель с ID {manufacturer_id} не найден')
+            return False
+        old_name = manufacturer.name
+        manufacturer.name = new_name.strip()
+        self._save_obj(manufacturer)
+        logger.info(f'Производитель {old_name} обновлен на {new_name}')
+        return True  
