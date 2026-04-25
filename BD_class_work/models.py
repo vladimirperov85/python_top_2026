@@ -173,3 +173,5 @@ class StoreManager:
         self._save_obj(manufacturer)
         logger.info(f'Производитель {old_name} обновлен на {new_name}')
         return True  
+    
+    

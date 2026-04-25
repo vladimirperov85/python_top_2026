@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from datetime import date
 
 Base = declarative_base()
 
@@ -38,6 +39,18 @@ class Reader(Base):
 
     def __repr__(self):
         return f"Reader(id={self.id}, first_name={self.first_name}, last_name={self.last_name}, email={self.email})"
+
+
+class BookIssue(Base):
+    __tablename__ = "book_issues"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    reader_id = Column(Integer, ForeignKey("readers.id"), nullable=False)
+    issue_date = Column(Date, nullable=False)
+    return_date = Column(Date, nullable=True)
+
+    def __repr__(self):
+        return f"BookIssue(id={self.id}, book_id={self.book_id}, reader_id={self.reader_id}, issue_date={self.issue_date})"
 
 
 class LibraryManager:
@@ -153,6 +166,7 @@ class LibraryManager:
             print(f"Читатель с ID {reader_id} не найден.")
 
     def delete_reader(self, reader_id):
+
         reader = self.find_reader_by_id(reader_id)
         if reader:
             self.session.delete(reader)
@@ -160,3 +174,54 @@ class LibraryManager:
             print(f"Читатель с ID {reader_id} удален из базы данных.")
         else:
             print(f"Читатель с ID {reader_id} не найден.")
+
+    def is_book_issued(self, book_id):
+        active_issue = (
+            self.session.query(BookIssue)
+            .filter(BookIssue.book_id == book_id, BookIssue.return_date.is_(None))
+            .first()
+        )
+        return active_issue is not None
+
+    def issue_book_to_reader(self, book_id, reader_id):
+        if self.is_book_issued(book_id):
+            print(f"Книга с ID {book_id} уже выдана.")
+            return None
+        book = self.find_book_by_id(book_id)
+        if not book:
+            print(f"Книга с ID {book_id} не найдена.")
+            return None
+        reader = self.find_reader_by_id(reader_id)
+        if not reader:
+            print(f"Читатель с ID {reader_id} не найден.")
+            return None
+        issue = BookIssue(book_id=book_id, reader_id=reader_id, issue_date=date.today())
+        self.session.add(issue)
+        self.session.commit()
+        print(
+            f"Книга {book.title} выдана читателю {reader.first_name} {reader.last_name} {date.today()}."
+        )
+        return issue
+
+    def return_book_from_reader(self, issue_id):
+        issue = self.session.query(BookIssue).filter(BookIssue.id == issue_id).first()
+        if not issue:
+            print(f"Выдача с ID {issue_id} не найдена.")
+            return None
+        if issue.return_date is not None:
+            print(f"Книга с ID {issue.book_id} уже возвращена.")
+        else:
+            issue.return_date = date.today()
+            self.session.commit()
+            print(f"Книга с ID {issue.book_id} возвращена {date.today()}")
+            return issue
+
+    def get_active_issues(self):
+        active_issues = (
+            self.session.query(BookIssue).filter(BookIssue.return_date.is_(None)).all()
+        )
+        if len(active_issues) == 0:
+            print("Нет активных выдач.")
+        else:
+            print(f"Найдено активных выдач:{len(active_issues)}")
+        return active_issues

@@ -4,45 +4,25 @@ from models import LibraryManager
 if __name__ == "__main__":
     manager = LibraryManager("sqlite:///BD_home_work/My_bd.db")
     manager.create_tables()
+    # # выдаем книги читателям
+    print("Выдача книг читателям:")
+    print("============================================================")
+    manager.issue_book_to_reader(book_id=1, reader_id=1)  # используйте ваши аргументы
+    manager.issue_book_to_reader(book_id=2, reader_id=2)
+    # # пытаемся выдать книгу которая уже выдана
+    manager.issue_book_to_reader(book_id=1, reader_id=1)
+    # # пытаемся выдать книгу которой нет в библиотеке
+    manager.issue_book_to_reader(book_id=99, reader_id=1)
 
-    # Код для  тестирования методов сущности Book
+    # тестирование выдачи книг,её возврат,отображение активных выдач
+    print("Активные выдачи:")
+    print("============================================================")
 
-    manager.add_book(title="Война и мир", author_id=1, year=1869, isbn="1234567890")
-    author = manager.add_author("Лев Толстой")
+    active_after = manager.get_active_issues()  # выводим активные выдачи
+    print(active_after)
     print()
-    # Добавим книгу с существующим author_id
-    book = manager.add_book(title="Война и мир", author_id=author.id, year=1869)
+    manager.return_book_from_reader(issue_id=1)  # используйте ваши аргументы
+    manager.return_book_from_reader(issue_id=3)
     print()
-    # Получим все книги
-    all_books = manager.get_all_books()
-    for b in all_books:
-        print(b)
-    print()
-    # Найдём книгу по ID
-    found_book = manager.find_book_by_id("id книги из вашей базы данных")
-    if found_book:
-        print(f"Найдена: {found_book}")
-    else:
-        print("Книга не найдена.")
-    print()
-    # Обновим название книги
-    manager.update_book(
-        book_id="id книги из вашей базы данных",
-        new_title="Новое название  книги",
-        new_year="новый год выпуска книги",
-    )
-    updated_book = manager.find_book_by_id("id книги из вашей базы данных")
-    print()
-    # Удалим книгу
-    manager.delete_book("id книги из вашей базы данных")
-    print()
-    # Код для  тестирования методов сущности Reader
-
-    reader1 = manager.add_reader("Иван", "Петров", "ivan@example.com")
-    print()
-    manager.update_reader(2, new_email="новый email")
-    print()
-    manager.update_reader(2, new_first_name="новое имя")
-    print()
-    manager.delete_reader(2)
-    print()
+    active_after = manager.get_active_issues()  # выводим активные выдачи после возврата
+    print(active_after)
