@@ -214,6 +214,29 @@ class StoreManager:
         return True
     
     def add_product(self, name: str,manufacturer_id:int,category:str,price:Decimal|float|int,serial_number:Optional[str] = None) -> Product:
-        pass
+        if not isinstance(name,str):
+            raise ValueError('Название должно быть  строкой')
+        if  not isinstance(category, str):
+            raise ValueError('Название должно быть  строкой')
+        if  not isinstance(price,(int,float)):
+            price = Decimal(str(price))
+        elif not isinstance(price, Decimal):
+            raise ValueError('Цена должна быть  числом')
+        manufacturer = self.find_manufacturer_by_id(manufacturer_id)
+        if not manufacturer:
+            raise ValueError(f'Производитель с ID {manufacturer_id} не найден')
+        product = Product(name=name.strip(),
+                manufacturer_id=manufacturer_id,
+                category=category,
+                price=price,
+                serial_number=serial_number.strip() if serial_number else None)
+        try:
+            saved_product = self._save_obj(product)
+            logger.info(f'Товар добавлен {saved_product.name}')
+            return saved_product
+        except SQLAlchemyError as e:
+            pass
+        
+        
 
 
