@@ -1,11 +1,29 @@
 from models import StoreManager
-
+import os
 def main():
-    store_manager = StoreManager('order_database.db')
-    print('Create manufacturer')
-    sony = store_manager.add_manufacturer('Sony')
-    print('Sony')
+    db_path = "Mvideo.db"
+    store = StoreManager(db_path)
+    print(f'База данных создана по пути {os.path.abspath(db_path)}')
+    try:
+        # found = store.find_manufacturer_by_id(3)
+        # if found:
+        #     print(found)
+        # else:
+        #     print('Not found')
+        # upd = store.update_manufacturer(3, 'MICROSOFT')
+        # if upd:
+        #     upd = store.find_manufacturer_by_id(3)
+        #     print(f'Обновлен {upd}')
+        # else:
+        #     print('Not found')
+        
+
+    except Exception as e:
+        print(f'{e}')
+        
+    
+
 
 if __name__ == '__main__':
-    
     main()
+
