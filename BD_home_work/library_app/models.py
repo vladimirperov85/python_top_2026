@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from datetime import date
 
 Base = declarative_base()
 
@@ -40,6 +41,18 @@ class Reader(Base):
         return f"Reader(id={self.id}, first_name={self.first_name}, last_name={self.last_name}, email={self.email})"
 
 
+class BookIssue(Base):
+    __tablename__ = "book_issues"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    reader_id = Column(Integer, ForeignKey("readers.id"), nullable=False)
+    issue_date = Column(Date, nullable=False)
+    return_date = Column(Date, nullable=True)
+
+    def __repr__(self):
+        return f"BookIssue(id={self.id}, book_id={self.book_id}, reader_id={self.reader_id}, issue_date={self.issue_date})"
+
+
 class LibraryManager:
 
     def __init__(self, database_url="sqlite:///database.db"):
@@ -58,7 +71,10 @@ class LibraryManager:
         print(f"Автор {name} добавлен в базу данных.")
         return author
 
-    def add_book(self,title, author_id, year, isbn):
+    def add_book(self, title, author_id, year, isbn=None):
+        if not self.find_author_by_id(author_id):
+            print(f"Автор с ID {author_id} не найден.")
+            return None
         book = Book(title=title, author_id=author_id, year=year, isbn=isbn)
         self.session.add(book)
         self.session.commit()
@@ -68,8 +84,14 @@ class LibraryManager:
     def get_all_authors(self):
         return self.session.query(Author).all()
 
+    def get_all_books(self):
+        return self.session.query(Book).all()
+
     def find_author_by_id(self, author_id):
         return self.session.query(Author).filter(Author.id == author_id).first()
+
+    def find_book_by_id(self, book_id):
+        return self.session.query(Book).filter(Book.id == book_id).first()
 
     def update_author(self, author_id, new_name):
         author = self.session.query(Author).filter_by(id=author_id).first()
@@ -80,6 +102,20 @@ class LibraryManager:
         else:
             print(f"Автор с ID {author_id} не найден.")
 
+    def update_book(self, book_id, new_title=None, new_year=None, new_isbn=None):
+        book = self.find_book_by_id(book_id)
+        if book:
+            if new_title is not None:
+                book.title = new_title
+            if new_year is not None:
+                book.year = new_year
+            if new_isbn is not None:
+                book.isbn = new_isbn
+            self.session.commit()
+            print(f"Книга с ID {book_id} обновлена.")
+        else:
+            print(f"Книга с ID {book_id} не найдена.")
+
     def delete_author(self, author_id):
         author = self.session.query(Author).filter_by(id=author_id).first()
         if author:
@@ -88,3 +124,104 @@ class LibraryManager:
             print(f"Автор с ID {author_id} удален из базы данных.")
         else:
             print(f"Автор с ID {author_id} не найден.")
+
+    def delete_book(self, book_id):
+        book = self.find_book_by_id(book_id)
+        if book:
+            self.session.delete(book)
+            self.session.commit()
+            print(f"Книга с ID {book_id} удалена из базы данных.")
+        else:
+            print(f"Книга с ID {book_id} не найдена.")
+
+    def add_reader(self, first_name, last_name, email):
+        reader = Reader(first_name=first_name, last_name=last_name, email=email)
+        self.session.add(reader)
+        self.session.commit()
+        print(f"Читатель {first_name} добавлен в базу данных.")
+        return reader
+
+    def get_all_readers(self):
+        return self.session.query(Reader).all()
+
+    def find_reader_by_id(self, reader_id):
+        return self.session.query(Reader).filter(Reader.id == reader_id).first()
+
+    def update_reader(
+        self, reader_id, new_first_name=None, new_last_name=None, new_email=None
+    ):
+        reader = self.find_reader_by_id(reader_id)
+        if reader:
+            if new_first_name is not None:
+                reader.first_name = new_first_name
+                print(f"Имя читателя с ID {reader_id} обновлено на '{new_first_name}'.")
+            if new_last_name is not None:
+                reader.last_name = new_last_name
+                print(f"Имя читателя с ID {reader_id} обновлено на '{new_last_name}'.")
+            if new_email is not None:
+                reader.email = new_email
+                print(f"Имя читателя с ID {reader_id} обновлено на '{new_email}'.")
+            self.session.commit()
+        else:
+            print(f"Читатель с ID {reader_id} не найден.")
+
+    def delete_reader(self, reader_id):
+
+        reader = self.find_reader_by_id(reader_id)
+        if reader:
+            self.session.delete(reader)
+            self.session.commit()
+            print(f"Читатель с ID {reader_id} удален из базы данных.")
+        else:
+            print(f"Читатель с ID {reader_id} не найден.")
+
+    def is_book_issued(self, book_id):
+        active_issue = (
+            self.session.query(BookIssue)
+            .filter(BookIssue.book_id == book_id, BookIssue.return_date.is_(None))
+            .first()
+        )
+        return active_issue is not None
+
+    def issue_book_to_reader(self, book_id, reader_id):
+        if self.is_book_issued(book_id):
+            print(f"Книга с ID {book_id} уже выдана.")
+            return None
+        book = self.find_book_by_id(book_id)
+        if not book:
+            print(f"Книга с ID {book_id} не найдена.")
+            return None
+        reader = self.find_reader_by_id(reader_id)
+        if not reader:
+            print(f"Читатель с ID {reader_id} не найден.")
+            return None
+        issue = BookIssue(book_id=book_id, reader_id=reader_id, issue_date=date.today())
+        self.session.add(issue)
+        self.session.commit()
+        print(
+            f"Книга {book.title} выдана читателю {reader.first_name} {reader.last_name} {date.today()}."
+        )
+        return issue
+
+    def return_book_from_reader(self, issue_id):
+        issue = self.session.query(BookIssue).filter(BookIssue.id == issue_id).first()
+        if not issue:
+            print(f"Выдача с ID {issue_id} не найдена.")
+            return None
+        if issue.return_date is not None:
+            print(f"Книга с ID {issue.book_id} уже возвращена.")
+        else:
+            issue.return_date = date.today()
+            self.session.commit()
+            print(f"Книга с ID {issue.book_id} возвращена {date.today()}")
+            return issue
+
+    def get_active_issues(self):
+        active_issues = (
+            self.session.query(BookIssue).filter(BookIssue.return_date.is_(None)).all()
+        )
+        if len(active_issues) == 0:
+            print("Нет активных выдач.")
+        else:
+            print(f"Найдено активных выдач:{len(active_issues)}")
+        return active_issues
