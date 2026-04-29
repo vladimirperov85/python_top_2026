@@ -1,5 +1,5 @@
 from sqlalchemy import ForeignKey, Column, Integer, String, Boolean, create_engine, select, Numeric
-from sqlalchemy.orm import DeclarativeBase, Session, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Session, Mapped, mapped_column, relationship,selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import date
 from typing import List, Optional,cast
@@ -231,8 +231,85 @@ class StoreManager:
             logger.info(f'Товар добавлен {saved_product.name}')
             return saved_product
         except SQLAlchemyError as e:
-            pass
+            if 'unique constrain failed' in str(e).lower():
+                raise ValueError(f'Товар с таким серийным номером {serial_number} уже существует') 
+            raise
+    
+    
+    def find_all_products(self):
+        stmt = select(Product)
+        return self._fetch_all(stmt)
+    
+
+    def find_product_by_id(self, product_id: int) -> Optional[Product]:
+        if not isinstance(product_id, int) or product_id <= 0:
+            raise ValueError(f'{product_id} должно быть целым числом')
         
+        stmt = select(Product).where(Product_id=product_id).options(
+            selectinload(Product.manufacturer,Product.orders)
+        )
+        return self._fetch_one(stmt)
         
+    def find_products_by_name_or_category(self,query:str)-> List[Product]:
+        if not isinstance(query,str) or not query.strip():
+            return []
+        stmt = select(Product).where(
+            Product.name.ilike(f'%{query.strip()}%') | Product.category.ilike(f'%{query.strip()}%')
+        )
+        return self._fetch_all(stmt)
+
+
+    def update_product(self,
+        product_id: int,
+        new_name: Optional[str] = None,
+        new_price: Decimal | float | int | None = None,
+        new_serial_number: Optional[str] = None) -> bool:
+
+        product = self.find_product_by_id(product_id)
+        if not product:
+            logger.warning(f'Товар с ID {product_id} не найден')
+            return False
+        if new_name is not None:
+            if not isinstance(new_name, str) or not new_name.strip():
+                raise ValueError('Название должно быть строкой и не пустой')
+            product.name = new_name.strip()
+        if new_price is not None:
+            if isinstance(new_price, (int, float)):
+                new_price = Decimal(str(new_price))
+            elif not isinstance(new_price, Decimal):
+                raise ValueError('Цена должна быть числом')
+            product.price = new_price
+        if new_serial_number is not None:
+                if not isinstance(new_serial_number, str):
+                    raise ValueError('Номер серийный должен быть строкой')
+                product.serial_number = new_serial_number.strip() if new_serial_number else None
+        try:
+            self._save_obj(product)
+            logger.info(f'Товар с id {product_id} сохранен')
+            return True
+        except SQLAlchemyError as e:
+            if 'unique constraint failed' in str(e).lower():
+                raise ValueError(f'Товар с таким серийным номером {new_serial_number} уже существует')
+            
+    def delete_product(self, product_id: int) -> bool:
+        product = self.find_product_by_id(product_id)
+        if not product:
+            logger.warning(f'Товар с ID {product_id} не найден')
+            return False
+        active_orders = [order for order in product.orders if order.is_active]
+        if active_orders:
+            logger.warning(
+                f'Товар {product.name} имеет активные заказы, удаление невозможно',
+                f'Он содержится в {len(active_orders)} заказа '
+                )
+            return False
+        self._delete_obj(product)
+        logger.info(f'Товар с id {product_id} удален')
+        return True
+            
+
+        
+
+
 
 
