@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey, Column, Integer, String, Boolean, create_engi
 from sqlalchemy.orm import DeclarativeBase, Session, Mapped, mapped_column, relationship
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional,cast
 from decimal import Decimal
 import logging
 
@@ -105,12 +105,12 @@ class StoreManager:
     def __init__(self, db_url: str):
         self.engine = create_engine(f'sqlite:///{db_url}', echo=False, connect_args={'check_same_thread': False})
         Base.metadata.create_all(self.engine) 
-        logger.info(f'Connect to DB : {db_url}')  # Исправлено: была опечатка с {db_path}
+        logger.info(f'Connect to DB : {db_url}')  
 
     def _get_session(self) -> Session:
         return Session(self.engine)
     
-    def _fetch_one(self, stmt):  # Исправлено: было _ferth_one (опечатка) и неправильная вложенность
+    def _fetch_one(self, stmt):  
         try:
             with self._get_session() as session:
                 result = session.scalar(stmt)
@@ -119,11 +119,11 @@ class StoreManager:
             logger.error(f'Error request: {e}')
             raise
 
-    def _fetch_all(self, stmt):  # Исправлено: отступы (были внутри _fetch_one)
+    def _fetch_all(self, stmt) ->List[Manufacturer]:
         try:
             with self._get_session() as session:
                 result = session.scalars(stmt).all()
-                return result
+                return cast(List[Manufacturer], result)
         except SQLAlchemyError as e:
             logger.error(f'Errors request: {e}')
             raise
@@ -140,8 +140,8 @@ class StoreManager:
             logger.error(f'Error save obj: {e}')
             raise
     
-    def _delete_obj(self, obj_del):  # Исправлено: было delete_obj, исправлено название
-        try:
+    def _delete_obj(self, obj_del):
+        try:  
             with self._get_session() as session:
                 session.delete(obj_del)
                 session.commit()
@@ -162,10 +162,6 @@ class StoreManager:
                 return result.scalars().all()
             return result
             
-    def _execute_mutation(self, obj_save):
-        with Session(self.engine) as session:
-            session.add(obj_save)
-            session.commit()
 
     def add_manufacturer(self, name: str) -> Manufacturer:  # Исправлено: было get_manufacturer с дублированием
         if not isinstance(name, str):
@@ -181,7 +177,7 @@ class StoreManager:
         if stmt is None:
             stmt = select(Manufacturer)
         return self._fetch_all(stmt)
-
+    
     def find_manufacturer_by_id(self, manufacturer_id: int) -> Optional[Manufacturer]:
         if not isinstance(manufacturer_id, int) or manufacturer_id <= 0:
             raise ValueError('ID должен быть целым положительным числом')
