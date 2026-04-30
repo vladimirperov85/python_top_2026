@@ -118,21 +118,27 @@ class LibraryManager:
 
     def delete_author(self, author_id):
         author = self.session.query(Author).filter_by(id=author_id).first()
-        if author:
-            self.session.delete(author)
-            self.session.commit()
-            print(f"Автор с ID {author_id} удален из базы данных.")
-        else:
+        if not author:
             print(f"Автор с ID {author_id} не найден.")
+            # IDE может не видеть .books — это нормально, добавлено через relationship()
+        if author.books:
+            raise ValueError('у автора есть книги а базе данных.Удаление невозможно')
+        self.session.delete(author)
+        self.session.commit()
+        print(f"Автор с ID {author_id} удален из базы данных.")
 
     def delete_book(self, book_id):
         book = self.find_book_by_id(book_id)
-        if book:
-            self.session.delete(book)
-            self.session.commit()
-            print(f"Книга с ID {book_id} удалена из базы данных.")
-        else:
-            print(f"Книга с ID {book_id} не найдена.")
+        if not book:
+            raise ValueError(f"Книга с ID {book_id} не найдена.")
+        book_issue = self.is_book_issued(book.id)
+        if book_issue:
+            raise ValueError(f'Книга с {book_id} имеет активные записи. Удаление невозможно')
+        self.session.delete(book)
+        self.session.commit()
+        print(f"Книга с ID {book_id} удалена из базы данных.")
+        
+            
 
     def add_reader(self, first_name, last_name, email):
         reader = Reader(first_name=first_name, last_name=last_name, email=email)
@@ -166,15 +172,18 @@ class LibraryManager:
             print(f"Читатель с ID {reader_id} не найден.")
 
     def delete_reader(self, reader_id):
-
         reader = self.find_reader_by_id(reader_id)
-        if reader:
-            self.session.delete(reader)
-            self.session.commit()
-            print(f"Читатель с ID {reader_id} удален из базы данных.")
-        else:
+        if not reader:
             print(f"Читатель с ID {reader_id} не найден.")
-
+            return
+        active_issues = self.session.query(BookIssue).filter(BookIssue.reader_id == reader_id, BookIssue.return_date.is_(None)).first()
+        if active_issues:
+            raise ValueError(f"Читатель с ID {reader_id} имеет активные выдачи. Удаление невозможно")
+        self.session.delete(reader)
+        self.session.commit()
+        print(f"Читатель с ID {reader_id} удален из базы данных.")
+        
+            
     def is_book_issued(self, book_id):
         active_issue = (
             self.session.query(BookIssue)
@@ -225,3 +234,18 @@ class LibraryManager:
         else:
             print(f"Найдено активных выдач:{len(active_issues)}")
         return active_issues
+
+
+    def find_books_by_author_name(self, author_name):
+        books = self.session.query(Book).join(Author).filter(Author.name == author_name).all()
+        return books
+    
+    def display_all_books_with_authors(self):
+        books =  self.session.query(Book).join(Author).all()
+        for book in books:
+            print(f'Книга: \"{book.title}\" - автор: {book.author.name}')
+            
+            
+    
+        
+        
